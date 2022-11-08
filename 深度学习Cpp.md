@@ -176,6 +176,155 @@ cout<<"p指向的地址:"<<p<<endl;
 
 ---
 
+指针的类型 限制了指针能够操作的范围
+
+```cpp
+unsigned ua{100000};
+int a{1000};
+
+long long * lptr = (long long *) &ua;
+cout<<*lptr<<endl;
+/*
+    因为 lptr 是long long 类型，可以操作8个字节的内存
+    ua: xx xx xx xx
+        xx xx xx xx
+    相当于long long 把ua后面的8个字节都作为了其访问的内存值
+*/
+unsigned * uptr = &ua;
+cout<<*uptr<<endl;
+
+int * ptr = (int*)&ua;
+*ptr = -1;
+cout<<*ptr<<endl;   // -1
+
+cout<<*uptr<<endl;  // 4294967295 uptr要按照其类型进行取值
+```
+
+```cpp
+int a [] {1,20,30,40,50};
+int * p = &a[0]; // 等价于 p = &a  数组的地址就是数组第一个元素的地址
+cout<<(*p)++<<endl; // 打印1，然后修改a[0]为2
+
+int a [] {1,20,30,40,50};
+int * p = &a[0];
+cout<<*p++<<endl; // 打印1，然后指针后移
+cout<<(*p)<<endl; // 打印20
+```
+
+
+
+数组的底层实现是利用了指针，从原理上讲，指针和数组是同一个方法的不同表达。数组名本身就是一个指针，数组元素只是这个指针按照一定的偏移量后对应的内存区域中的内容。
+
+```cpp
+int a [] {1,20,30,40,50};
+int * p = &a[0];
+cout<<a[2]<<" "<< p[2]<<endl; // 指针p也能够直接访问
+
+cout<<sizeof(a)<<endl; // 20
+cout<<sizeof(p)<<endl; // 8
+```
+
+```cpp
+int a [] {1,20,30,40,50};
+int * p = {a+2}; // 此时p指向的是30
+
+cout<<*p<<endl; // 30
+cout<<p[2]<<endl; // 50
+```
+
+
+
+```cpp
+int* p[5]; // 指针数组 是一个数组，数组中每个元素都是一个指针
+int (*p)[5]; //数组指针 是一个指针，指向的是一个长度为5的数组类型
+```
+
+数组指针：
+
+```cpp
+int a [2][3] {{1,2,3},{2,3,1}};
+int (*p)[3]{a}; // 指向的类型是数组
+cout<<&a<<endl;
+cout<<p<<endl;
+cout<<p[1][1]<<endl;
+cout<<p+1<<endl; // 增加了 1*数据类型大小=1*3(元素)*4(字节)
+```
+
+
+
+#### 动态内存分配
+
+---
+
+C语言内存分配：
+
+```cpp
+// void * malloc(size_t size);
+int * p = (int *)malloc(sizeof(int) * 10);
+if(p == nullptr){
+  //分配内存失败
+}else{
+  // 进一步操作
+}
+```
+
+```CPP
+// void * calloc(size_t count,size_t size);  为用户分配count * size 字节个内存，并返回内存分配的地址
+int * p = (int *)calloc(20,sizeof(int));
+```
+
+> calloc 和 malloc 的区别，calloc会默认把分配的内存清0.
+>
+> 但是calloc的效率没有malloc高。
+
+```cpp
+// void * realloc(void * block,size_t size);
+//realloc将为用户重新分配内存，block是已经分配好的内存，size是要求重新分配的大小，函数返回重新分配的内存
+int *p = (int*)malloc(10);
+ p = (int*)realloc(p,100);
+```
+
+>  realloc 还会将之前的数据拷贝
+
+```cpp
+void free(void * block); // 用于释放上述 申请的内存
+```
+
+C++内存分配：
+
+```cpp
+int * p = new int;  // 申请内存
+delete p;
+
+int * p = new int[10];  
+delete []p;         // 释放内存
+```
+
+动态内存分配的风险：
+
+- 悬挂指针问题：释放完内存后没有将指针指向为nullptr
+- 重复释放内存：释放完之后，另一个指向当前内存的指针再次释放
+- 内存碎片问题：频繁的申请和释放小块内存会造成内存碎片问题，对于嵌入式开发以及要求较高的开发要注意该问题。
+
+复制内存：
+
+```cpp
+// void	*memcpy(void *__dst, const void *__src, size_t __n);
+int a[3]{1,2,3};
+int * b = new int[3];
+memcpy(b,a,3*sizeof(int));
+```
+
+设置内存：
+
+```cpp
+// void * memset(void * dst,int val,size_t size);
+int *p = new int[100];
+memset(p,12,100 * sizeof(int));
+```
+
+
+
 
 
 
@@ -309,7 +458,7 @@ void test(){
 >    ```cpp
 >    void func(int a,int b = 10);
 >    void func(int a,int b){
->        
+>           
 >    }
 >    ```
 
@@ -350,10 +499,10 @@ func2(10);
 >
 >    ```cpp
 >    void func(int a,int b= 10){
->        
+>           
 >    }
 >    void func(int a){
->        
+>           
 >    }
 >    a = 10;
 >    func(a);//出现二义性
