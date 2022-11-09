@@ -441,7 +441,45 @@ cout<<sptrA<<" "<< *sptrA<<" " <<sptrB<<" "<<*sptrB<<endl;
 
 `std::shape_ptr.unique()`：如果当前指针是唯一拥有该指针的，会返回true  `c++ 17 已经用不了了`
 
-`std::shape_ptr.reset()`： 会将当前共享指针设置为nullptr，如果当前指针是最后一个拥有该指针的对象，会释放内存。
+`std::shape_ptr.reset()`： 会将当前共享指针设置为nullptr，如果当前指针是最后一个拥有该指针的对象，会释放内存
+
+
+
+**函数指针**：
+
+函数指针本身是一个指针，即一个可以指向特定类型函数的指针
+
+`int (*xxx)(int a,int b)` : 函数返回类型 (* 函数指针变量名)（参数类型 参数名称,...,);
+
+```cpp
+// 创建函数指针类型 两种方式
+typedef double (*funcp) (int,int);
+using pfadd = char (*) (int,int);
+
+double add(int a,int b){
+    return a + b;
+}
+
+int diff(int a,int b){
+    return a-b;
+}
+
+int main(){
+    funcp p = add;
+    cout<<p(2,4)<<endl;
+
+    pfadd pf = (pfadd)diff;  // 显示类型强转
+    cout<<pf(80,3)<<endl;
+}
+```
+
+
+
+**指针函数**：
+
+指针函数是一个返回指针的函数 即 `int * xxx(int a,int b)`
+
+
 
 
 
@@ -680,8 +718,6 @@ void test(){
 
 
 
-
-
 函数的引用参数：
 
 - 指针可以传入nullptr，而引用不可以。
@@ -701,8 +737,6 @@ void test(){
   ```
 
   
-
-
 
 不定量函数参数：
 
@@ -726,10 +760,6 @@ int main(){
     cout<<add(8,2,3,3,4,4,5,5,10)<<endl;
 }
 ```
-
-
-
-
 
 
 
@@ -774,7 +804,7 @@ func2(10);
 
 > 函数重载**没有 返回值 的相关要求**。为什么呢？
 >
-> 当编译器能从上下文中确定唯一的函数的时，如`int ret = func()`,这个当然是没有问题的。然而，我们在==编写程序过程中可以忽略他的返回值==。那么这个时候,假如一个函数为`void func(int x);`另一个为`int func(int x); `当我们直接调用`func(10)`,这个时候编译器就不确定调用那个函数。所以在c++中禁止使用返回值作为重载的条件。
+> 当编译器能从上下文中确定唯一的函数的时，如`int ret = func()`,这个当然是没有问题的。然而，我们在 编写程序过程中可以忽略他的返回值 。那么这个时候,假如一个函数为`void func(int x);`另一个为`int func(int x); `当我们直接调用`func(10)`,这个时候编译器就不确定调用那个函数。所以在c++中禁止使用返回值作为重载的条件。
 
 > 调用重载函数时的注意事项：
 >
@@ -784,10 +814,10 @@ func2(10);
 >
 >    ```cpp
 >    void func(int a,int b= 10){
->              
+>                 
 >    }
 >    void func(int a){
->              
+>                 
 >    }
 >    a = 10;
 >    func(a);//出现二义性
@@ -796,8 +826,233 @@ func2(10);
 > 函数重载的原理：**汇编过程取别名**
 >
 > 编译器为了实现函数重载，也是默认为我们做了一些幕后的工作，编译器用不同的参数类型来修饰不同的函数名，比如`void func(); `编译器可能会将函数名修饰成`_func`，当编译器碰到`void func(int x)`,编译器可能将函数名修饰为`_func_int`,当编译器碰到`void func(int x,char c)`,编译器可能会将函数名修饰为`_func_int_char`
+>
+> 下面这两个函数能够重载吗？
+>
+> ```cpp
+> int func(int * p,int t){
+>   
+> }
+> int func(int a[],int t){
+>   
+> }
+> // 不能重载
+> //----------------------
+> int ave(int & a,int & b){
+>   
+> }
+> int ave(int a,int b){
+>   
+> }
+> // 不能，会出现歧义，如下
+> int x = 10,y = 20;
+> ave(x,y);
+> 
+> //----------------------
+> int f(int &a,int &b){
+>   //...
+> }
+> 
+> float f(float a,float b){
+>   
+> }
+> 
+> char a = 10,b = 20;
+> f(a,b); // 调用的是 float f(float a,float b)
+> f((int)a,(int)b); // 调用的是 float f(float a,float b)
+> //----------------------
+> int ave(int a,int b){
+>   
+> }
+> int ave(const int a,const int b){
+>   
+> }
+> // 不能重载，因为是值传递，这个const没有意义，不会修改传入的参数
+> 
+> //----------------------
+> int ave(int& a,int& b){
+>   
+> }
+> int ave(const int& a,const int& b){
+>   
+> }
+> // 可以重载
+> int a = 10,b = 20;
+> ave(a,b); // 调用ave(int& a,int& b)
+> const int a = 10;
+> const int b = 20;
+> ave(a,b); // 调用int ave(const int& a,const int& b)
+> ```
 
 
+
+函数模版：
+
+```cpp
+template <typename type1> 
+type1 addT(type1 x,type1 y){
+    return (x + y) / 2;
+} 
+
+int main(){
+    cout<<addT(10.0,15.0)<<endl;
+  cout<<addT<int>(10,15.0)<<endl; // 强制要求类型为int
+}
+```
+
+函数模版可以定义一种函数模版的例外情况：
+
+```cpp
+template <typename T>  // 如果传入的是指针就会出错，因此定义一种例外
+T compare(T a,T b){
+    return a >= b ? a : b;
+}
+
+template <>
+int * compare(int * a,int * b){
+    return (*a) >= (*b) ? a : b;
+}
+
+int main(){
+    int c;
+    int a = 100,b = 200;
+    c = *compare(&a,&b);
+    cout<<c<<endl; 
+}
+```
+
+函数重载优先于函数模版：
+
+```cpp
+float ave(float a,float b){
+    return (a + b) / 3;
+}
+
+template <typename type1> 
+type1 ave(type1 x,type1 y){
+    return (x + y) / 2;
+} 
+
+int main(){
+    cout<<ave(10.0f,14.0f)<<endl; // 输出是8
+}
+```
+
+函数模版的重载：
+
+```cpp
+template <typename type1> 
+type1 ave(type1 x,type1 y){
+    return (x + y) / 2;
+} 
+
+template <typename T> 
+T ave(T a,T b,T c){
+    return (a + b + c) / 3;
+}
+
+```
+
+
+
+
+
+ 
+
+auto：
+
+auto 可以声明一个变量，让编译器根据变量的值来推断变量的类型
+
+利用这个特性可以用auto创建一个函数
+
+```cpp
+auto ave(int a,int b){
+  return a + b;
+}
+// 注：以上并不是auto的最恰当用法
+```
+
+- auto 不能保留const属性
+
+  ```cpp
+  const int a{};
+  auto c = a; // c 是int类型
+  ```
+
+- auto会优先推断为值类型而不是引用类型
+
+  ```cpp
+  auto bigger(int &a,int &b){
+    return a > b ? a : b;
+  }// auto会优先匹配成值类型
+  
+  // 未了达到这种目的，可以使用拖尾函数
+  auto bigger(int & a,int & b)->int&
+  {
+    return a > b ? a : b;
+  }
+  ```
+
+- auto利用函数返回值来确定类型的时候，函数会执行。
+
+decltype：
+
+ decltype关键字可以得出一个表达式的类型。
+
+```cpp
+int a{};
+unsigned b {};
+decltype(a-b) x; //相当于 unsigned x
+```
+
+- decltype内的表达式如果没有经历任何运算，那么得出的数据类型同表达式内的数据类型，并且decltype可以保留const和引用类型。
+
+```cpp
+const int b;
+int & la{b};
+int * p;
+
+decltype(b) x; // int x
+decltype(la) x; // int & x
+decltype(p) x; // int * x
+```
+
+- decltype内的表达式如果经历了任何运算，那么得出的数据类型根据运算结果是否有固定的内存地址来决定，如果有固定的内存的地址则为引用类型，否则为运算结果的类型。
+
+```cpp
+int a{100},b{100};
+int * p{&a};
+
+decltype(a+b) x; // int x
+decltype(*p) x; // int & x
+decltype(p[0]) x; // int & x
+```
+
+- decltype内的表达式如果是一个函数，那么得出的数据类型根据函数的返回类型来确定的。
+
+  > 注意：decltype并不会真正执行表达式的运算，因此表达式中的函数不会执行。
+
+
+
+利用decltype的特性，可以将上面的函数改写：
+
+```cpp
+// 未了达到这种目的，可以使用拖尾函数
+auto bigger(int & a,int & b)->int&
+{
+  return a > b ? a : b;
+}
+// c++11
+auto bigger(int & a,int & b)->decltype(a > b?a:b) // 由于运算结果有固定的内存地址，因此是引用类型
+{
+  return a > b ? a : b;
+}
+// c++14
+decltype(auto) bigger(int & a,int & b)
+{
+  return a > b ? a : b;
+}
+```
 
 
 
