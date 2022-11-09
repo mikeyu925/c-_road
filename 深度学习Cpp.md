@@ -10,7 +10,7 @@
 
 C语言通过`static`关键字来控制`标识符`只得在当前源文件可见，C++还可以通过`namespace`命名空间实现。
 
-> 命名空间通常解决在多人合作过程种出现的==标识符重复问题==。
+> 命名空间通常解决在多人合作过程种出现的 标识符重复问题。
 >
 > 注意：
 >
@@ -130,6 +130,20 @@ using int64_ = long;
 
 
 
+类型转换：
+
+```cpp
+// c++
+int a = static_cast<int> (b);
+
+// c
+int a = int(b);
+```
+
+
+
+
+
 #### 结构体
 
 ---
@@ -171,6 +185,73 @@ cout<<"p指向的地址:"<<p<<endl;
 
 > 1. #define没有数据类型，`const`修饰的变量有数据类型，会进行类型检查
 > 2. `const`有作用域，而#define不重视作用域，默认定义处到文件结尾，不能限定常量的作用范围。宏常量可以有命名空间吗？
+
+
+
+#### 字符串
+
+---
+
+字符串创建：
+
+```cpp
+string s{"11412431"};
+cout<<s<<endl;
+string ss{"124112",2}; // 从0开始截取2位
+cout<<ss<<endl;
+string sss{"1241512",2,3}; // 从下标2开始截取3位
+cout<<sss<<endl;
+
+
+ss = ss + "asd";
+// ss = "ss" + "124"; // error!!!不可以
+```
+
+字符串截取：
+
+```cpp
+// 字符串截取
+std::string str{"123456789"};
+cout<<str.substr(3)<<endl; //456789
+cout<<str.substr(2,3)<<endl; //345
+```
+
+字符串比较：
+
+```cpp
+// 字符串比较
+string A{"abcdefg"};
+string B{"abcdffg"};
+if(B > A){
+  cout<<B<<" > "<<A<<endl;
+}
+if(B.compare(("dd" + A)) < 0){
+  cout<<B<<" < "<<("dd" + A)<<endl;
+}
+
+// compare 扩展用法
+cout<<A.compare(2,3,B)<<endl; // 将cde和B比较
+cout<<A.compare(4,2,B,2,3)<<endl; // 将ef和cdf比较
+```
+
+字符串插入：
+
+```cpp
+str.insert(要插入的位置，要插入的字符串，要插入字符串的起始位置，要插入的大小);
+```
+
+替换字符串：
+
+```cpp
+str.replace(要替换内容的起始位置，要替换的长度，替换后的内容)
+str.replace(要替换内容的起始位置，要替换的长度，替换后的字符长度，替换的字符)
+```
+
+
+
+
+
+
 
 #### 指针
 
@@ -234,6 +315,8 @@ cout<<p[2]<<endl; // 50
 
 
 
+指针数组：
+
 ```cpp
 int* p[5]; // 指针数组 是一个数组，数组中每个元素都是一个指针
 int (*p)[5]; //数组指针 是一个指针，指向的是一个长度为5的数组类型
@@ -249,6 +332,120 @@ cout<<p<<endl;
 cout<<p[1][1]<<endl;
 cout<<p+1<<endl; // 增加了 1*数据类型大小=1*3(元素)*4(字节)
 ```
+
+
+
+常量指针：`const 变量类型 *`
+
+常量指针表示这个指针指向的是一个常量的内存地址，常量指针中，不能对其指向的内存进行修改，但指针指向的地址可以改变。
+
+```cpp
+const int a {1000};
+const int * p = &a;
+const int b {2000};
+p = &b;
+*p = 200; // 不可以 会报错！
+```
+
+
+
+指针常量：`变量类型 * const`
+
+指针常量表示该指针是个常量，不能修改指针的指向，但是可以修改指针指向的内存的值。
+
+```cpp
+int a {1000};
+int * const p {&a};
+*p = 200;
+cout<<*p<<endl;
+int b {10};
+p = &b;  // 不可以改变指针的指向
+```
+
+
+
+```cpp
+int a[5];
+int c = sizeof(a); // 数组可以使用sizeof求内存大小，这个过程是由编译器来实现的
+```
+
+
+
+**智能指针**：
+
+`std::unique_ptr`：唯一智能指针，只能有唯一一个指针指向对应的内存
+
+```cpp
+int * a = new int;
+unique_ptr<int> uptr {new int{5}};  // 指向单个对象
+unique_ptr<int> intptr;
+// intptr = uptr;  不可以指向同一个内存空间
+cout<<uptr<<" "<<*uptr<<endl;
+
+unique_ptr<int[]> arrayptr {new int[3]{1,2,3}};
+cout<<arrayptr[2]<<endl; // 只能用数组方式访问元素
+
+//c++14之后
+std::unique_ptr<int[]> uptr{std::make_unique<int[]>(5)}; // 此处5代表元素个数
+std::unique_ptr<int> uptr{std::make_unique<int>(5)}; // 此处5代表初始化值
+```
+
+```cpp
+uptr.reset(); // 释放内存空间，并将指针设置为nullptr
+
+// release() 返回std::unique_ptr的指针，并且将std::unique_ptr设置为nullptr，但是不会释放其占用的内存空间
+int * p = uptr.release(); // 不会释放其占用的内存空间,将指针设置为nullptr
+```
+
+```cpp
+int * p = uptr.get(); // 返回对应的原始指针
+```
+
+`std::unique_prt`指针具备唯一性，因此不能被复制，但是可以转移。
+
+```cpp
+int * a = new int;
+unique_ptr<int> ptrA {std::make_unique<int>(9)};  // 指向单个对象
+unique_ptr<int> ptrB;
+// ptrB = ptrA; //不可以！
+ptrB = std::move(ptrA); // 转移后ptrA被设置为nullptr
+cout<<"addr of aptA: "<<ptrA<<" val of ptrB: "<<*ptrB<<endl;
+```
+
+
+
+`std::shared_ptr`：共享指针
+
+```cpp
+std::shared_ptr<int> sptrA{std::make_shared<int>(9)};
+cout<<*sptrA<<endl;
+
+// std::shared_ptr<int[]> sptrB{std::make_shared<int[]>(2)};  // make_shared不支持[]
+std::shared_ptr<int[]> sptrB{new int[4]}; 
+
+```
+
+多个共享指针可以指向同一个内存
+
+```cpp
+std::shared_ptr<int> sptrA{std::make_shared<int>(9)};
+std::shared_ptr<int> sptrB{sptrA};
+cout<<sptrA<<" "<< *sptrA<<" " <<sptrB<<" "<<*sptrB<<endl;
+```
+
+> 可以有多个share_ptr指向同一地址，同一地址只有当足后一个share_ptr释放的时候才会释放其所占的内存空间。
+>
+>  share_ptr会记录当前的地址有多少个智能指针调用。
+
+`ptr.use_count()`：返回当前指针有多少个对象调用
+
+`std::shape_ptr.unique()`：如果当前指针是唯一拥有该指针的，会返回true  `c++ 17 已经用不了了`
+
+`std::shape_ptr.reset()`： 会将当前共享指针设置为nullptr，如果当前指针是最后一个拥有该指针的对象，会释放内存。
+
+
+
+
 
 
 
@@ -325,6 +522,14 @@ memset(p,12,100 * sizeof(int));
 
 
 
+**堆和栈**：
+
+堆本质是一块空闲内存（c++把堆称为自由存储区）。malloc和new 都是操作系统从堆中申请内存。
+
+栈，是程序在编译时就确定了大小的一段内存区域，主要是用于临时变量的存储，栈的效率高于堆，但是容量有限。
+
+
+
 
 
 
@@ -333,22 +538,22 @@ memset(p,12,100 * sizeof(int));
 
 ---
 
-引用(非常重要！) 
+引用是创建一个变量的引用名称
 
 语法：`type &ref = val`，此处的`&`不是取地址操作符，起的是标识作用  [引用是什么？--给空间取别名]
 
-> 本质：内部实现是一个常指针`type * const ref = &val`[即不能改变指针指向]，因此==引用所占用的空间大小与指针相同==
+> 本质：内部实现是一个常量指针`type * const ref = &val`[即不能改变指针指向]，因此 **引用所占用的空间大小与指针相同**
 
-> 使用场景：
+> **使用场景**：
 >
 > 1. 作为函数参数传递数据，节约空间
-> 2. 作为函数返回值,但是注意==不要返回局部变量的引用== [因为局部变量在函数结束后内存会被回收]
+> 2. 作为函数返回值,但是注意   **不要返回局部变量的引用**   [因为局部变量在函数结束后内存会被回收]
 
-> 注意：
+> **注意**：
 >
 > 1. 必须在**声明引用变量时进行初始化**
 > 2. **初始化后不能改变**
-> 3. 不能有NULL引用，必须确保引用是和一块合法的存储单元关联
+> 3. **不能有NULL引用**，必须确保引用是和一块合法的存储单元关联
 > 4. 如果函数当左值，那么该函数必须返回引用**[**针对使用场景的第2条**]**
 
 
@@ -370,6 +575,30 @@ int (&arr3)[5] = arr;
 //方法3：
 typedef int (&MY_ARR1)[5];
 MY_ARR1 arr4 = arr
+```
+
+```cpp
+// 数组的引用
+int a[100]{};
+int (&b) [100] = a; // 数组引用 b是一个引用 引用类型是int[100] 其他类型不行！比如int[120]
+cout<<a<<endl;
+cout<<b<<endl;
+
+
+//作为函数参数传递后:
+//  --- 优势：可以在函数内部更方便的操作
+//  --- 劣势：数组元素不固定就不行了
+void show(int (&a) [100]){
+    int n  = sizeof(a);
+    for(auto x : a){
+        cout<<x<<endl;
+    }
+}
+int main(){
+    int a[100]{};
+    show(a);
+}
+
 ```
 
 
@@ -423,6 +652,10 @@ void test(){
 >
 > 2. `const`修饰的引用，不能修改
 
+
+
+
+
 #### 函数
 
 ---
@@ -447,6 +680,59 @@ void test(){
 
 
 
+
+
+函数的引用参数：
+
+- 指针可以传入nullptr，而引用不可以。
+
+- 引用作为参数不能出现隐式转换
+
+  ```cpp
+  void add(int& a){
+      a += 10;
+  }
+  
+  int main(){
+      float a = 11234.02f;
+      add(a);  // 会报错！
+      cout<<a<<endl;
+  }
+  ```
+
+  
+
+
+
+不定量函数参数：
+
+```cpp
+#include<iostream>
+#include<cstdarg>
+using namespace std;
+
+int add(unsigned int count,...){
+    int rt{};
+    char * p;
+    va_start(p,count);  // 将参数数据赋值给p
+    for(int i = 0;i < count;i++){
+        rt += va_arg(p,int); // 以int类型读取参数
+    }
+    va_end(p); // 释放指针
+    return rt;
+}
+
+int main(){
+    cout<<add(8,2,3,3,4,4,5,5,10)<<endl;
+}
+```
+
+
+
+
+
+
+
 函数的默认参数：[增加函数的灵活性]
 
 > 注意：
@@ -458,8 +744,7 @@ void test(){
 >    ```cpp
 >    void func(int a,int b = 10);
 >    void func(int a,int b){
->           
->    }
+>              }
 >    ```
 
 函数的占位参数：[应用于运算符重载时区分前++和后++]
@@ -499,10 +784,10 @@ func2(10);
 >
 >    ```cpp
 >    void func(int a,int b= 10){
->           
+>              
 >    }
 >    void func(int a){
->           
+>              
 >    }
 >    a = 10;
 >    func(a);//出现二义性
@@ -511,6 +796,10 @@ func2(10);
 > 函数重载的原理：**汇编过程取别名**
 >
 > 编译器为了实现函数重载，也是默认为我们做了一些幕后的工作，编译器用不同的参数类型来修饰不同的函数名，比如`void func(); `编译器可能会将函数名修饰成`_func`，当编译器碰到`void func(int x)`,编译器可能将函数名修饰为`_func_int`,当编译器碰到`void func(int x,char c)`,编译器可能会将函数名修饰为`_func_int_char`
+
+
+
+
 
 #### 类
 
