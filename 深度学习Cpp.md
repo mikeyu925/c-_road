@@ -1,5 +1,53 @@
 ## C++知识点总结
 
+#### C/CPP 基础
+
+---
+
+<img src="/Users/ywh/Documents/FindGoodJob/cpp_road-master/深度学习Cpp.assets/image-20221110143844930-8062327.png" alt="image-20221110143844930" style="zoom:50%;" />
+
+头文件不会主动编译，源文件会主动编译，当头文件被引入则会被编译
+
+```cpp
+头文件里面放声明，如果放了定义，则多个文件引入了该头文件，则会发生重定义错误。
+// 但是以下函数可以定义在头文件中
+ static void func(){
+  
+}// 只在对应为文件中有效
+
+inline int func(){
+  
+}
+```
+
+声明可以多次，但是定义只能定义一次。
+
+当多个源码公用同一个全局变量时，一般在头文件中声明多个源文件要公用的全局变量。
+
+```cpp
+extern int verId;
+```
+
+至于verId的定义可以放到任何源文件中，但是不能放到头文件中，因为违背了定义只能定义一次的原则。
+
+```cpp
+但是通过添加static，可以在头文件中定义变量
+static int a = 1000; // 只在各自的源文件中有效，即每个源文件都分配的不同的内存地址给 a
+```
+
+
+
+```cpp
+// 一般头文件中都有一句
+# pragma once // 防止头文件中的第一行，可以防止头文件被多次调用。
+```
+
+
+
+
+
+
+
 
 
 #### namespace
@@ -560,6 +608,20 @@ memset(p,12,100 * sizeof(int));
 
 
 
+malloc和new的本质区别：
+
+- 对于普通的数据类型来说，两者没什么区别，但是对于类来说，malloc仅仅是分配内存，而new除了分配内存以外还会调用构造函数。
+
+free和delete的本质区别：
+
+- 对于普通的数据类型来说，两者没什么区别，但是对于类来说，free仅仅是释放内存，而delete除了释放内存以外还会调用析构函数。
+
+delete和delete[]的本质区别：
+
+- 对于普通的数据类型来说，两者没什么区别，对于类来说，delete仅仅是释放内存空间，并且调用第一个元素的析构函数，而delete[]不仅仅释放内存空间，还会调用每一个元素的析构函数。
+
+
+
 **堆和栈**：
 
 堆本质是一块空闲内存（c++把堆称为自由存储区）。malloc和new 都是操作系统从堆中申请内存。
@@ -814,10 +876,10 @@ func2(10);
 >
 >    ```cpp
 >    void func(int a,int b= 10){
->                 
+>                             
 >    }
 >    void func(int a){
->                 
+>                             
 >    }
 >    a = 10;
 >    func(a);//出现二义性
@@ -953,11 +1015,80 @@ T ave(T a,T b,T c){
 
 ```
 
+推断函数模版返回类型：
+
+```cpp
+template<typename T1,typename T2,typename T3>
+T3 ave(T1 a,T2 b){
+  return (a + b) / 2;
+}
+// 需要显示标识返回类型为double
+cout<<ave<int,float,double>(10,3.5)<<endl;
+// cout<<ave(10,3.5)<<endl; // error ！
 
 
+template <typename T1,typename T2>
+decltype(auto) bigger(T1 a,T2 b){
+  return a > b ? a : b;
+}
+//为什么要用自动类型推断？
+/*
+template <typename T1,typename T2>
+T1 bigger(T1 a,T2 b){
+  return a > b ? a : b;
+}
+char a = 50;
+int b = 10000000;
+cout<<bigger(a,b)<<endl; // 错误，因为返回的1000000背截断成了char类型
+/*
+```
 
+函数模版参数的默认值：
 
- 
+```cpp
+template<typename T1 = double,typename T2,typename T3> // T1默认值为double
+T1 ave(T3 a,T2 b){
+  return (a + b) / 2;
+}
+
+// -----比较特别的默认参数用法-----
+template<typename T1,typename T2,typename T3 = T1>
+T1 ave(T3 a,T2 b){
+  return (a + b) / 2;
+}
+
+// -----非类型的模版参数-----
+template<typename T1,int max,int min> 
+bool ave(T1& hp,T1 damage){
+  hp -= damage;
+  // max = 100; // 不可以！ max不是个变量
+  if(hp > max) hp = max;
+  return hp < min;
+}
+
+template<typename T1,T1 max = 2000,T1 min = 200> // max 和 min 可以有默认值
+bool ave(T1& hp,T1 damage){
+  hp -= damage;
+  if(hp > max) hp = max;
+  return hp < min;
+}
+
+// 	巧用非类型参数实现处理固定大小的数组
+template <typename T,int count>
+T ave(const T (&arr)[count]){
+  T sum{0};
+  for(int i = 0;i < count;i++){
+    sum +=arr[i];
+  }
+  return sum / count;
+}
+```
+
+函数模版的本质：
+
+<img src="/Users/ywh/Documents/FindGoodJob/cpp_road-master/深度学习Cpp.assets/image-20221110131346100.png" alt="image-20221110131346100" style="zoom:50%;" />
+
+> 函数模版的本质是生成了一堆函数
 
 auto：
 
@@ -1032,9 +1163,7 @@ decltype(p[0]) x; // int & x
 
   > 注意：decltype并不会真正执行表达式的运算，因此表达式中的函数不会执行。
 
-
-
-利用decltype的特性，可以将上面的函数改写：
+利用decltype的特性，可以将上面 的函数改写：
 
 ```cpp
 // 未了达到这种目的，可以使用拖尾函数
@@ -1053,6 +1182,55 @@ decltype(auto) bigger(int & a,int & b)
   return a > b ? a : b;
 }
 ```
+
+
+
+static：
+
+利用static可以声明一个静态变量
+
+```cpp
+static int a;
+```
+
+static的变量，如果没有指定初始化的值，那么会初始化为0，并且只会初始化1次
+
+
+
+inline：
+
+inline用来声明一个内联函数，内联函数将会建议编译器把这个函数处理成内联代码以提升性能。
+
+```cpp
+inline int add(int x,int y){
+  return x + y;
+}
+```
+
+
+
+函数的声明和定义：
+
+```cpp
+// 函数声明
+int add(int,int); // extern int add(int,int); 函数声明本身就是extern的可以不行
+// 函数定义
+int add(int a,int b){
+  reurn a+b;
+}
+```
+
+声明可以声明多次，但定义只能定义一次。
+
+定义的本质是通过编译器与计算机对话，设计到内存的分配和访问。extern的作用也是告诉编译器，此处只是一个声明。你去别的地方找定义，是针对的全局变量。
+
+
+
+**函数名是内存地址**的本质：
+
+函数名本身就是函数的内存地址。
+
+
 
 
 
@@ -1079,28 +1257,86 @@ decltype(auto) bigger(int & a,int & b)
 > 1. 静态成员变量必须在**类中声明**，在**类外定义**
 >
 >    ```cpp
->    AAAA::static_a = 100;//类外定义
+>    using namespace std;
+>    
+>    class Role
+>    {
+>    private:
+>        int lv;
+>        bool isvip;
+>    public:
+>        static int count; // 类的静态变量
+>    
+>        Role(int v,bool vip); 
+>        ~Role();
+>    };
+>    
+>    int Role::count = 1; // 类外定义
+>    
+>    Role::Role(int v,bool vip):lv{v},isvip{vip}{}
+>    Role::~Role(){}
+>    
+>    int main(){
+>        Role r(100,true);
+>        Role rr(12,false);
+>        cout<<rr.count<<endl;
+>        rr.count++;
+>        cout<<r.count<<endl;
+>    }
 >    ```
 >
 > 2. **静态数据成员不属于某个对象**，在为对象分配空间中不包括静态成员所占空间[即静态成员变量属于类，**不属于对象，所有对象共享**]
 >
-> 3. 静态数据成员可以通过类名或者对象名来访问
+> 3. 静态数据成员可以通过类名或者对象名来访问，即 类的静态成员变量在没有类的实例的情况下，依然可以访问
 >
-> 4. **生命周期为整个程序，作用域在类内**
+> 4. **生命周期为整个程序，作用域在类内**。（也就是说是个全局变量，只是作用域在类内）
+>
+> 5. 使用inline关键字可以在类的说明中定义静态成员变量
+>
+>    ```cpp
+>    class Role
+>    {
+>    private:
+>        int lv;
+>        bool isvip;
+>    public:
+>        inline static int count{10};  // inline
+>        Role(int v,bool vip); 
+>        ~Role();
+>    };
+>    ```
+>
+> 6. c++17后可以方便的在类的说明中定义类的成员常量
+>
+>    ```cpp
+>    inline static const int count{10};  // inline
+>    ```
+>
+>    
+
+为什么要出现静态成员变量？
+
+> 节省空间，属于类，所有对象共享。
+
+
 
 类的**静态成员函数**：
 
 **注意点**：
 
-> 1. 静态成员函数**只能访问静态成员变量**
->2. 静态成员函数也有访问权限
-> 3. 普通成员函数可访问静态成员变量、也可以访问非静态成员变量
+> 1. 不管有没有类的实例，都可以访问类的静态成员函数
+>
+> 2. 类的静态成员函数**只能访问静态成员变量**
+>
+>    > 普通成员函数可访问静态成员变量、也可以访问非静态成员变量
+>
+> 3. 类的静态成员函数也有访问权限 pritae、public等
+>
+> 4. 类的静态成员函数不能是const
+>
+> 5. 类的静态成员函数不能使用this指针
 
 > 定义`静态const`数据成员时，最好在类内部初始化。
-
-为什么要出现静态成员变量？
-
-> 节省空间，属于类，所有对象共享。
 
 静态成员应用的一个实例： 「单例模式」---- 一个类只能实例化一个对象 
 
@@ -1179,18 +1415,148 @@ pA:010D13B0   pB:010D13B0
 
 `可见pA和pB是同一个对象~`
 
+
+
 ---
+
+
 
 「构造函数」和「析构函数」：
 
 实例化对象时，内部做了两件事：**分配空间**和**调用构造函数**进行初始化；在对象销毁前，编译器调用析构函数[释放该对象申请的堆空间等操作]。
 
+任何类都至少有一个构造函数
+
+默认构造函数：无参数，无返回值
+
+只要定义过构造函数，默认构造函数就不会被定义。但是有时希望还可以被默认构造，就需要一个类有一个默认构造函数。可以通过default定义：
+
+```cpp
+class Role{
+  private:
+  int a;
+ 	public:
+  Role()=default; // 效率更高
+  Role(){};// 也可以
+}
+```
+
 > 注意：
 >
 > 1. 构造函数和析构函数必须是公有的。构造函数私有时，实例不了对象 ==> 单例。
+>
 > 2. **构造函数可以重载，析构函数不行**。
+>
 > 3. 构造函数和析构函数**没有返回值**。
+>
 > 4. 编译器会默认提供默认构造函数和默认析构函数
+>
+> 5. 被explicit关键字修饰的构造函数会禁用类型转换
+>
+>    ```cpp
+>    #include <iostream>
+>       
+>    using namespace std;
+>       
+>    class Role
+>    {
+>    private:
+>        int lv;
+>    public:
+>        explicit Role(int v);  // 修饰的构造函数会禁止类型转换，并且只能放在类内
+>        bool isBig(Role r);
+>        ~Role();
+>    };
+>       
+>    Role::Role(int v)
+>    {
+>        cout<<"调用构造函数:"<<v<<endl;
+>        lv = v;
+>    }
+>       
+>    Role::~Role()
+>    {
+>    }
+>       
+>    bool Role::isBig(Role r){
+>        return lv > r.lv;
+>    }
+>       
+>    int main(){
+>        Role r(100);
+>           
+>        // 如果加了 explicit 就不能这样写了
+>        // cout<<r.isBig(200)<<endl; // 传入的是200，会先进行构造函数，然后比较
+>       
+>        cout<<r.isBig(Role(50))<<endl;
+>    }
+>    ```
+>
+> 我们还可以使用成员初始化列表进行构造：
+>
+> ```cpp
+> class Role
+> {
+> private:
+>     int lv;
+>     bool isvip;
+> public:
+>     Role(int v,bool vip);  // 修饰的构造函数会禁止类型转换
+>     bool isBig(Role r);
+>     ~Role();
+> };
+> 
+> // 普通构造函数
+> // Role::Role(int v,bool vip)
+> // {
+> //     lv = v;
+> //     isvip = vip;
+> // }
+> 
+> //使用成员初始化列表
+> Role::Role(int v,bool vip):lv{v},isvip{vip}{
+> 
+> }
+> 
+> 
+> Role::~Role()
+> {
+> }
+> 
+> bool Role::isBig(Role r){
+>     return lv > r.lv;
+> }
+> 
+> int main(){
+>     Role r(100,true);
+> }
+> ```
+>
+> **优势**：
+>
+> - 效率更高
+>
+>   ```cpp
+>   // 普通方式：
+>   首先要分配内存空间，设定默认值，然后进入构造函数进行变量赋值
+>     
+>   // 成员初始化列表
+>   省去了设定默认值
+>   ```
+>
+> - 在某些情况下只能用这种方式进行初始化
+>
+>   ```cpp
+>   // 当成员变量有结构体类型或者类型，只能用成员初始化列表
+>   ```
+>
+>   
+>
+> **注意事项**：
+>
+> > 1. 使用成员初始化列表为为成员复制的顺序不是依据代码的顺序，而是成员变量在类的出现顺序
+> > 2. 如果使用了初始化列表，那么所有的构造函数都要使用初始化列表
+> > 3. 初始化列表只能使用于构造函数
 
 **拷贝构造函数**：用一个已有的对象去初始化另外一个对象
 
@@ -1202,9 +1568,9 @@ pA:010D13B0   pB:010D13B0
 >
 > 3. 函数局部对象以值传递的方式从函数返回
 >
->    -VS Debug模式返回的对象和局部对象地址不同
+>    - VS Debug模式返回的对象和局部对象地址不同
 >
->    -VS Release模式返回的对象和局部对象地址相同
+>    - VS Release模式返回的对象和局部对象地址相同
 
 ```cpp
 class AAAA {
@@ -1226,13 +1592,13 @@ public:
 };
 //测试函数
 void test() {
-	AAAA a1;		  //调用无参构造函数
-	AAAA a2(a1);	  // 调用拷贝构造函数
-	AAAA a3 = a1;     //调用拷贝构造函数
-	AAAA(10);		  //调用有参构造函数,这是一个匿名对象
-	AAAA a4 = 10;     //调用有参构造函数，进行了隐式转换，等价于A s = A(10); 如果不想要优化，则使用 explicit 关键字
-   //explicit 只能放在构造函数前面，构造函数只有一个参数或其他参数为默认参数时
-	AAAA a5(AAAA(200));   //调用有参构造函数
+    AAAA a1;		  //调用无参构造函数
+    AAAA a2(a1);	  // 调用拷贝构造函数
+    AAAA a3 = a1;     //调用拷贝构造函数
+    AAAA(10);		  //调用有参构造函数,这是一个匿名对象
+    AAAA a4 = 10;     //调用有参构造函数，进行了隐式转换，等价于A s = A(10); 如果不想要优化，则使用 explicit 关键字
+    //explicit 只能放在构造函数前面，构造函数只有一个参数或其他参数为默认参数时
+    AAAA a5(AAAA(200));   //调用有参构造函数
     AAAA a6 = AAAA(200);  //调用有参构造函数
     AAAA a7 = AAAA(); 	  //调用无参构造函数
 }
@@ -1258,11 +1624,15 @@ void test() {
 
 编译器提供构造函数规则：
 
-> 1. 默认情况下，C++编译器至少为我们写的类增加3个函数
+> 1. 默认情况下，C++编译器**至少**为我们写的类增加3个函数
 >    - **默认构造函数**(无参，函数体为空)
 >    - **默认析构函数**(无参，函数体为空)
 >    - **默认拷贝构造函数**，对类中**非静态成员属性进行简单值拷贝**
+>
+>    > 一般还有 **默认重载赋值运算符函数**
+>
 > 2. 如果用户定义拷贝构造函数，C++不会再提供任何默认构造函数
+>
 > 3. 如果用户定义了普通构造(非拷贝)，C++不在提供默认无参构造，但是会提供默认拷贝构造
 
 多个对象的构造和析构：
@@ -1271,10 +1641,9 @@ void test() {
 > 2. 成员对象的构造函数调用和定义的顺序一样
 > 3. 必须保证成员对象的构造和析构能被调用
 
-初始化列表：
+如果析构函数为空，最好使用关键字default来定义
 
-> 1. 如果使用了初始化列表，那么所有的构造函数都要使用初始化列表
-> 2. 初始化列表只能使用于构造函数
+
 
 ---
 
@@ -1319,9 +1688,9 @@ C++对象模型
 
 > 1. 空类大小为 1
 > 2. 类的成员函数不占类大小[在公共函数代码区]，静态成员不占类大小。普通成员变量占用类的大小
-> 3. ==类的成员函数和成员变量是分开存储的==。
+> 3. 类的成员函数和成员变量是分开存储的。
 
-<img src="F:\Typora\Picture\Cpp\2021-07-23_232843.jpg" alt="2021-07-23_232843" style="zoom:50%;" />
+
 
 `this`指针：一种隐含指针，**指向被调的成员函数所属对象**
 
@@ -1334,18 +1703,22 @@ C++对象模型
 
 C++编译器对普通成员函数的内部处理：
 
-![2021-07-23_233143](F:\Typora\Picture\Cpp\2021-07-23_233143.jpg)
-
 > this指针的使用：
 >
 > 1. 当形参和成员变量同名时，可用this指针来区分形参和成员变量
 > 2. 在类的非静态成员函数中**返回对象本身**，可使用`return *this`
 
----
+
+
+
 
 **常函数**与**常对象**
 
 `const`修饰成员函数：在成员函数的后面加上`const`，使函数成为**常函数**
+
+- const修饰的对象不能改变其成员变量的值
+- const对象只能调用const成员函数
+- 在const成员函数下，this指针也变成了const指针
 
 ```cpp
 //const修饰成员函数
@@ -1356,7 +1729,7 @@ public:
 		this->mID = 0;
 	}
 	//在函数括号后面加上const,修饰成员变量不可修改,除了mutable变量
-	void Operate() const{
+	void Operate() const{ // const成员函数
 		//this->mAge = 200; //mAge不可修改
 		this->mID = 10; //const Person* const tihs;
 	}
@@ -1379,6 +1752,30 @@ private:
 >    ```
 >
 > 2. 当成员变量类型符前用`mutable`修饰时例外。
+>
+> 3. const函数可以重载
+>
+>    ```cpp
+>    int Person::getId() const{
+>      return mID;
+>    }
+>    
+>    int Person::getId(){
+>      return mID;
+>    }
+>    ```
+>
+> 4. const_cast 可以将一个const变量的常量属性去掉
+>
+>    ```cpp
+>    void test(Role * p){
+>      //...
+>    }
+>             
+>    const Role user;
+>    const Role * p{&user};
+>    test(const_cast<Role *>(p));
+>    ```
 
 
 
@@ -1398,6 +1795,16 @@ const Person  MY;
 ```
 如果当前成员函数不打算修改成员变量，就最好定义为常函数
 ```
+
+
+
+
+
+
+
+
+
+
 
 **类模板**
 
@@ -1517,7 +1924,20 @@ class Crab;
 
 
 
+_thicall是c++中类的成员函数访问时定义的函数调用约定：
 
+- 寄存器ecx用来存放类的指针
+- 参数由右到左入栈
+- 堆栈由被调用者负责恢复
+
+类中的非静态成员函数都可以使用this指针，this指针本质上讲是把对象的指针通过寄存器ecx传入成员函数的，因此类中成员函数访问成员变量时，都是通过指针+偏移的形式来访问的，不管是否明确使用this指针。
+
+类的静态成员函数，本质上采用_cdecl约定：
+
+- 参数由右到左入栈
+- 由调用者恢复堆栈平衡
+
+因为类的静态成员函数本质上就是一个普通的函数，所以根本没有传递对象的指针，因此就不能访问其成员变量，而类的静态成员变量本质上相当于一个全局变量，有着固定的内存地址。
 
 #### 友元
 
@@ -1534,20 +1954,18 @@ class Crab;
 > 5. 一定程度上破坏了类的封装性
 
 ```cpp
-class Building;
+class Building; // 由于building类在Myfriend类后，在编译的时候不知道Building，因此需要声明下
 
 class MyFriend{
 public:
-	void LookAtBedRoom(Building& building);
-	void PlayInBedRoom(Building& building);
+	void LookAtBedRoom(Building& building){
+		cout << "我的朋友参观" << building.mBedroom << endl;
+	}
+	void PlayInBedRoom(Building& building){
+    cout << "我的朋友玩耍在" << building.mBedroom << endl;
+  }
 };
-//类外定义成员函数
-void MyFriend::LookAtBedRoom(Building& building){
-	cout << "我的朋友参观" << building.mBedroom << endl;
-}
-void MyFriend::PlayInBedRoom(Building& building){
-	cout << "我的朋友玩耍在" << building.mBedroom << endl;
-}
+
 
 class Building{
 	//全局函数做为友元函数
@@ -1573,6 +1991,8 @@ Building::Building(){
 	this->mSittingRoom = "客厅";
 	this->mBedroom = "卧室";
 }
+
+
 //友元全局函数
 void CleanBedRoom(Building& building){
 	cout << "友元全局函数访问" << building.mBedroom << endl;
@@ -1611,7 +2031,104 @@ int main(){
 >    你朋友的朋友不一定是你的朋友
 >    ```
 
+友元会破坏类的封装，所以建议仅仅是在没有更好的选择情况下使用友元，友元类不是一种平等的关系
 
+
+
+嵌套类：
+
+就是类中再写一个类，类中声明的类为嵌套类，而声明嵌套类的类称作外层类
+
+```cpp
+// 外层类
+class Role
+{
+    public:
+        class Weapon // 嵌套类————定义在类内的方式
+        {
+            int lv;
+        };
+    private:
+        int hp;
+        bool isvip;
+        Weapon left;
+        
+    public:
+
+        inline static int count{10}; 
+        Role(int v,bool vip); 
+        ~Role();
+};
+Role::Role(int v,bool vip):hp{v},isvip{vip}{}
+Role::~Role(){}
+
+int main(){
+    Role r(100,true);
+    // 想要申请Weapon必须要在Role作用域使用
+    Role::Weapon wp;
+}
+```
+
+```cpp
+// 方式2
+// 外层类
+class Role
+{
+    public:
+        class Weapon;
+    private:
+        int hp;
+        bool isvip;
+        // Weapon left; // 不完整的类型，20应该会修复
+    public:
+        inline static int count{10}; 
+        Role(int v,bool vip); 
+        ~Role();
+};
+Role::Role(int v,bool vip):hp{v},isvip{vip}{}
+Role::~Role(){}
+
+class Role::Weapon // 嵌套类————定义在类外的方式
+{
+    private:
+        int lv;
+    public:
+        Weapon();
+        Weapon * getObj();
+};
+
+Role::Weapon::Weapon(){
+    cout<<"weapon!"<<endl;
+}
+```
+
+- 作用域：
+
+  - 嵌套类的声明在外层类中，因此嵌套类的作用域受外层类限定
+
+- 访问权限：
+
+  - 嵌套类可以访问外层类的所有成员
+
+    > 很像外层类的友元感觉
+
+  - 外层类仅能访问嵌套类的公有成员
+
+
+
+局部类：
+
+定义在函数内的类为局部类
+
+> 作用域是在对应的函数内
+
+- 局部类的定义必须写在类内
+
+  > 因为如果定义写在函数内，就是属于函数嵌套了
+
+- 局部类中不允许使用静态成员变量
+
+- 局部类可以访问全局变量
 
 
 
@@ -1711,6 +2228,8 @@ class Student :private std::string, private std::valarray<double>
 
 **运算符重载**：目的是为了简化语法，只是另一种函数调用的方式
 
+重载运算符是为了让目标代码**更方便使用和维护**，而不是为了提高开发效率。
+
 > 注意：
 >
 > 1. 运算符重载不能改变本来寓意，不能改变基础类型寓意
@@ -1724,129 +2243,81 @@ class Student :private std::string, private std::valarray<double>
 >
 > - 运算符被定义为全局函数(对于一元是一个参数，对于二元是两个参数)还是成员函数(对于一元没有参数，对于二元是一个参数-此时该类的对象用作左耳参数)
 
+```cpp
+#include<iostream>
+using namespace std;
 
+class Phone{
+private:
+    int value;
+public:
+    Phone() = default;
+    Phone(int v){
+        this->value = v;
+    }
+    ~Phone(){}
+    int getVal(){
+        return this->value;
+    }
+    // 成员函数运算符重载
+    bool operator>(Phone &other){
+        return this->value > other.value;
+    }
 
-![img](F:\Typora\Picture\Cpp\clip_image002.jpg)
+    Phone operator+(Phone & ohter){
+        Phone p(this->value + ohter.value);
+        return p;
+    }
+};
+
+// 非成员函数运算符重载
+bool operator<(Phone & a,Phone &b){
+    return a.getVal() < b.getVal();
+}
+
+int main(){
+    Phone iphone14(6800);
+    Phone huaweiP40(6600);
+    if(huaweiP40 < iphone14){
+        cout<<"huawei is cheaper"<<endl;
+    }else{
+        cout<<"iphone is cheaper"<<endl;
+    }
+    Phone Ihua = iphone14 + huaweiP40;
+    cout<<Ihua.getVal()<<endl;
+}
+```
+
+注意事项：
 
 > 除了赋值号`=`外，基类中被重载的操作符都将被派生类继承。
-
+>
 > `=, [], () 和 -> `操作符只能通过成员函数进行重载 
 >
 > `<< `和 `>>`操作符最好通过友元函数进行重载
 >
-> 不要重载 `&&` 和 `||` 操作符，因为无法实现短路规则
-
-
-
-> 运算符重载过程：
+> 不要重载 `&&` 和 `||` 操作符，因为无法实现短路规则，也不建议重载`,`和`&`
 >
-> - 编译器看到两个对象的运算操作，那么编译器就回去寻找有没有对于的`operator`重载函数
+> > 重载后的逻辑运算符不会进行短路测试，c++17以前编译器可以自由决定计算左操作数还是右操作数数，c++17后规定顺序为先计算左再计算右
 >
-> - 编译器检查参数是否对应
+> 以下运算符不能重载：
 >
-> - 没有问题的话编译器就会执行该函数
-
-
-
-**+、-、*、/号运算符重载**
-
-> 以一个复数对象的+、-、*、/运算作为例子
-
-```cpp
-//ComplexNUm.h
-#pragma once
-#include<iostream>
-using namespace std;
-//复数类 
-class ComplexNum
-{
-public:
-    //构造函数
-	ComplexNum();
-	ComplexNum(double r, double i);
-	ComplexNum(const ComplexNum& other);
-	void Printcomplex();
-    //三个成员函数重载运算符
-	ComplexNum operator+(ComplexNum& other) {
-		ComplexNum tmp(this->real + other.real, this->image + other.image);
-		return tmp;
-	}
-	ComplexNum operator*(ComplexNum& other) {
-		ComplexNum tmp(this->real * other.real - this->image * other.image, this->real * other.real + this->image * other.image);
-		return tmp;
-	}
-	ComplexNum operator/(ComplexNum& other) {
-		double mul = other.real * other.real + other.image * other.image;
-		ComplexNum tmp((this->real * other.real + this->image * other.image) / mul, (this->image * other.real - this->real * other.image) / mul);
-		return tmp;
-	}
-public:
-	double real;
-	double image;
-};
-```
-
-```cpp
-//ComplexNUm.cpp
-#include "ComplexNUm.h"
-ComplexNum::ComplexNum() {
-	real = 0.0;
-	image = 0.0;
-}
-ComplexNum::ComplexNum(double r, double i) {
-	real = r;
-	image = i;
-}
-ComplexNum::ComplexNum(const ComplexNum& other) {
-	real = other.real;
-	image = other.image;
-}
-void ComplexNum::Printcomplex() {
-	if (image >= 0)
-		cout << real << "+" << image << "i" << endl;
-	else
-		cout << real << image << "i" << endl;
-}
-//全局重载运算符 因为是二元运算符 所以有两个参数
-ComplexNum operator-(ComplexNum& my, ComplexNum& other) {
-	ComplexNum tmp(my.real - other.real, my.image - other.image);
-	return tmp;
-}
-```
-
-**左移/右移运算符重载**
-
-> `<<`注意点：
+> - 对象访问运算符 `.`
+> - 作用域解析运算符`::`
+> - 求大小的运算符`sizeof`
+> - 条件运算符`?:`
 >
-> 1. 形参和实参是一个对象
-> 2. `ostream`形参和返回值要引用，因为`ostream`中把拷贝构造函数私有了
-> 3. 如果要和`endl`一起使用，那么必须返回`ostream`的对象
+> 不能修改运算符本身的优先级和相关性
+>
+> C++17后不能修改运算符的操作数的计算顺序
+>
+> 除了delete/delete[]和new / new []外，不能对原生数据类型的其他运算符进行重载 比如char 的 + 变成 - 。
+>
+> 运算符重载的函数一般可以传递值或者引用，大部分情况下，能够传递引用就不要传递值，对于不会修改的值最好是限定为const，某些时候要擅用使用右值引用&&作为参数。
 
-> 对与`cout<<endl;` `endl`是一个函数，作为参数传入了`operator<<(endl)`
+重载赋值运算符=：
 
-```cpp
-//重载<<是为了方便打印对象
-ostream &operator<<(ostream &out,Person & m){
-    out<<"name"<<m.name<<" age:"<<m.age<<endl;
-    return out;
-}
-//如果Person类的name、age属性为private，可以将其重载运算符函数定义为友元函数
-```
-
-```cpp
-istream & operator>>(istream &in,Person & m){
-    in>>m.name>>m.age;
-    return in;
-}
-```
-
-**赋值=运算符的重载**
-
-> 默认的赋值运算符重载函数进行了简单的赋值操作[**可能会出现内存泄露和同一块内存被释放两次**]，如下
-
-<img src="F:\Typora\Picture\Cpp\01赋值运算符重载.png" alt="01赋值运算符重载" style="zoom: 67%;" />
-
-因此需要重写赋值运算符重载函数
+默认的赋值运算符重载函数进行了简单的赋值操作[**可能会出现内存泄露和同一块内存被释放两次**]
 
 ```cpp
 //返回Student是为了防止 s1 = s2 = s3的错误；
@@ -1868,6 +2339,173 @@ Student & operator=(const Studen &stu){
 >
 > 没有引用则会调用拷贝构造，例如对于s1 = s2 = s3,如果返回的是值，则会产生新的对象，则赋值运算符本来的意义就错了
 
+
+
+重载<<和>>：
+
+"`<<`" 能够用在 `cout` 上是因为，在 `ostream` 类对 "`<<`" 进行了**重载**。
+
+> `<<`注意点：
+>
+> 1. 形参和实参是一个对象
+> 2. `ostream`形参和返回值要引用，因为`ostream`中把拷贝构造函数私有了
+> 3. 如果要和`endl`一起使用，那么必须返回`ostream`的对象
+
+> 对与`cout<<endl;` `endl`是一个函数，作为参数传入了`operator<<(endl)`
+
+```cpp
+class CStudent // 学生类
+{
+public:
+
+    // 构造函数
+    CStudent(int id = 0, int age = 0, string name = ""):m_id(id), m_age(age), m_name(name) { }
+    
+    // 将该函数声明成友元函数
+    // 目的是使得函数可以访问CStudent类的私有成员变量
+    friend ostream & operator<<(ostream & o, const CStudent & s);
+    
+    // 将该函数声明成友元函数
+    // 目的是使得函数可以给CStudent类的私有成员变量进行赋值
+    friend istream & operator>>(istream & is,  CStudent & s);
+    
+private:
+    int m_age;      // 年龄
+    int m_id;       // ID号
+    string m_name;  // 名字
+};
+
+// 重载ostream对象的流插入<<运算符函数
+// 目的是使得能打印输出CStudent对象的信息
+ostream & operator<<(ostream & o, const CStudent & s)
+{
+    o << s.m_id << "," << s.m_age << "," << s.m_name;
+    return o;
+}
+
+// 重载istream对象的流提取>>运算符函数
+// 目的是使得初始化CStudent对象的内容
+istream & operator>>(istream & is,  CStudent & stu)
+{
+    string inputStr;
+    is >> inputStr;
+    
+    int pos = inputStr.find(",", 0);         // 查找首次出现逗号的位置
+    string tmpStr = inputStr.substr(0, pos); // 截取从0到pos位置的字符串
+    stu.id = atoi(tmpStr.c_str());           // atoi可以将char*类型的内容转成int类型
+    
+    int pos2 = inputStr.find(",", pos + 1);         z   // 查找第二次出现逗号的位置
+    tmpStr = inputStr.substr(pos + 1, pos2 - pos -1);  // 取出age的值
+    stu.age = atoi(tmpStr.c_str());                    // atoi可以将char*类型的内容转成int类型
+    
+    tmpStr = inputStr.substr(pos2 + 1, inputStr.length() - pos2 - 1); // 取出name的值
+    stu.name = tmpStr;
+    
+    return is;
+}
+
+int main()
+{
+    CStudent stu;
+    
+    // 将输入的信息，初始化stu对象
+    cin << stu;
+    
+    // 输出std对象的信息
+    cout >> stu;
+    
+    return 0;
+}
+
+```
+
+```cpp
+//重载<<是为了方便打印对象
+ostream &operator<<(ostream &out,Person & m){
+    out<<"name"<<m.name<<" age:"<<m.age<<endl;
+    return out;
+}
+//如果Person类的name、age属性为private，可以将其重载运算符函数定义为友元函数
+```
+
+```cpp
+istream & operator>>(istream &in,Person & m){
+    in>>m.name>>m.age;
+    return in;
+}
+```
+
+
+
+重载[ ]：
+
+下标运算符`[ ]`必须以成员函数的形式进行重载。该重载函数在类中的声明格式如下：
+
+- `返回值类型 & operator[ ] (参数);`
+
+  > `[ ]`不仅可以访问元素，还可以修改元素。
+
+- `const 返回值类型 & operator[ ] (参数) const;`
+
+  >`[ ]`只能访问而不能修改元素。
+
+在实际开发中，我们应该同时提供以上两种形式，这样做是为了适应 const 对象，因为通过 const 对象只能调用 const 成员函数，如果不提供第二种形式，那么将无法访问 const 对象的任何元素。
+
+```cpp
+#include<iostream>
+
+using namespace std;
+
+class Array
+{
+private:
+    int len;
+    int * ptr;
+public:
+    Array(int l = 0);
+    ~Array();
+public:
+    int & operator[](int i);
+    const int & operator[](int i) const;
+};
+
+Array::Array(int l)
+{
+    if(len == 0) this->ptr = nullptr;
+    else this->ptr = new int[l];
+}
+
+Array::~Array()
+{
+    delete []ptr;
+}
+
+int & Array::operator[](int i){
+    if (i >= 0 && i < len)
+    {
+        return ptr[i];
+    }
+    cout<<"索引越界"<<endl;
+    return ptr[0];
+}
+
+const int & Array::operator[](int i) const{
+    if (i >= 0 && i < len)
+    {
+        return ptr[i];
+    }
+    cout<<"索引越界"<<endl;
+    return ptr[0];
+}
+
+int main(){
+    Array arr(10);
+    arr[2] = 2;
+    arr[0] = -1;
+    cout<<arr[0]<<" "<<arr[2]<<endl;
+}
+```
+
 **关系运算符重载**
 
 ```cpp
@@ -1877,7 +2515,7 @@ bool operator==(Student & stu){
 // > < 等关系运算符同理
 ```
 
-前++和后++运算符重载 [运用到了占位参数]
+**重载++和--** ：[运用到了占位参数]
 
 ```cpp
 //前置++
@@ -1896,17 +2534,51 @@ Person operator++(int ){//占位参数，必须是int
 //优先前置++，因为效率高，不需要产生新的对象
 ```
 
-**数组下标重载**
+**重载new和delete**：
+
+new和delete重载形式既可以是类的成员函数，也可以是全局函数。一般情况下，内建的内存管理运算符就够用了，只有在需要自己管理内存时才会重载。
 
 ```cpp
-int &operator[](int index){
-    if(this->mSize <= index)
-    	this->mSize++;
-    return this->arr[index];
+// 以成员函数的形式重载 new 运算符：
+void * className::operator new( size_t size ){
+  //TODO:
+}
+// 以全局函数的形式重载 new 运算符：
+void * operator new( size_t size ){
+  //TODO:
 }
 ```
 
-**指针运算符重载**
+> 两种重载形式的返回值相同，都是`void *`类型，并且都有一个参数，为`size_t`类型。在重载 new 或 new[] 时，无论是作为成员函数还是作为全局函数，它的第一个参数必须是 size_t 类型。size_t 表示的是要分配空间的大小，对于 new[] 的重载函数而言，size_t 则表示所需要分配的所有空间的总和。
+>
+> 当然，重载函数也可以有其他参数，但都必须有默认值，并且第一个参数的类型必须是 size_t。
+
+delete重载也有两种形式
+
+```cpp
+// 以类的成员函数的形式进行重载：
+void className::operator delete( void *ptr){
+    //TODO:
+}
+// 以全局函数的形式进行重载：
+void operator delete( void *ptr){
+    //TODO:
+}
+```
+
+> 两种重载形式的返回值都是 void 类型，并且都必须有一个 void 类型的指针作为参数，该指针指向需要释放的内存空间。
+
+使用方法：
+
+```cpp
+C * c = new C;  //分配内存空间
+//TODO:
+delete c;  //释放内存空间
+```
+
+
+
+**指针运算符重载->**：
 
 ```cpp
 class Smartptr{
@@ -1933,21 +2605,79 @@ smp->printfinfo();
 (*smp).printfinfo();
 ```
 
-**重载函数调用符号**  
+**重载函数调用符号**：
+
+函数调用运算符 () 可以被重载用于类的对象。当重载 () 时，您不是创造了一种新的调用函数的方式，相反地，这是创建一个可以传递任意数目参数的运算符函数。其实就是创建一个可调用的对象
+
+- ( )重载称为functor函数对象
+- ( )不限制参数个数
+- ( )可以拥有默认实参
 
 ```cpp
-void operator()(){
-    cout<<"我其实不是个函数"<<endl;
+#include <iostream>
+using namespace std;
+ 
+class Distance
+{
+   private:
+      int feet;             // 0 到无穷
+      int inches;           // 0 到 12
+   public:
+      // 所需的构造函数
+      Distance(){
+         feet = 0;
+         inches = 0;
+      }
+      Distance(int f, int i){
+         feet = f;
+         inches = i;
+      }
+      // 重载函数调用运算符
+      Distance operator()(int a, int b, int c)
+      {
+         Distance D;
+         // 进行随机计算
+         D.feet = a + c + 10;
+         D.inches = b + c + 100 ;
+         return D;
+      }
+      // 显示距离的方法
+      void displayDistance()
+      {
+         cout << "F: " << feet <<  " I:" <<  inches << endl;
+      }
+      
+};
+int main()
+{
+   Distance D1(11, 10), D2;
+
+   cout << "First Distance : "; 
+   D1.displayDistance();
+
+   D2 = D1(10, 10, 10); // invoke operator()
+   cout << "Second Distance :"; 
+   D2.displayDistance();
+
+   return 0;
 }
 ```
 
-为什么要重载函数调用符号？
+> 为什么要重载函数调用符号？
+>
+> - 方便代码维护：写成全局重载函数，大家都可以调用
+>- 作为算法的策略
+> - 方便有权限的调用函数
 
-> 方便代码维护：写成全局重载函数，大家都可以调用
->
-> 作为算法的策略
->
-> 方便有权限的调用函数
+运算符重载过程：
+
+- 编译器看到两个对象的运算操作，那么编译器就回去寻找有没有对于的`operator`重载函数
+
+- 编译器检查参数是否对应
+
+- 没有问题的话编译器就会执行该函数
+
+
 
 #### 智能指针
 
@@ -2084,15 +2814,7 @@ void test(){
 > 2. 重写父类的虚函数。
 > 3. 父类指针指向子类对象。
 
-多态实现原理：
 
-![多态实现原理图1](F:\Typora\Picture\Cpp\多态实现原理图1.png)
-
-![多态实现原理图2](F:\Typora\Picture\Cpp\多态实现原理图2.png)
-
-![多态实现原理图3](F:\Typora\Picture\Cpp\多态实现原理图3.png)
-
-![多态实现原理图4](F:\Typora\Picture\Cpp\多态实现原理图4.png)
 
 
 
