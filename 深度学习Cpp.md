@@ -1,4 +1,4 @@
-## C++知识点总结
+## C++基础大总结
 
 #### C/CPP 基础
 
@@ -876,10 +876,10 @@ func2(10);
 >
 >    ```cpp
 >    void func(int a,int b= 10){
->                             
+>                                   
 >    }
 >    void func(int a){
->                             
+>                                   
 >    }
 >    a = 10;
 >    func(a);//出现二义性
@@ -1455,9 +1455,9 @@ class Role{
 >
 >    ```cpp
 >    #include <iostream>
->       
+>             
 >    using namespace std;
->       
+>             
 >    class Role
 >    {
 >    private:
@@ -1467,27 +1467,27 @@ class Role{
 >        bool isBig(Role r);
 >        ~Role();
 >    };
->       
+>             
 >    Role::Role(int v)
 >    {
 >        cout<<"调用构造函数:"<<v<<endl;
 >        lv = v;
 >    }
->       
+>             
 >    Role::~Role()
 >    {
 >    }
->       
+>             
 >    bool Role::isBig(Role r){
 >        return lv > r.lv;
 >    }
->       
+>             
 >    int main(){
 >        Role r(100);
->           
+>                 
 >        // 如果加了 explicit 就不能这样写了
 >        // cout<<r.isBig(200)<<endl; // 传入的是200，会先进行构造函数，然后比较
->       
+>             
 >        cout<<r.isBig(Role(50))<<endl;
 >    }
 >    ```
@@ -1771,7 +1771,7 @@ private:
 >    void test(Role * p){
 >      //...
 >    }
->             
+>                   
 >    const Role user;
 >    const Role * p{&user};
 >    test(const_cast<Role *>(p));
@@ -2129,92 +2129,6 @@ Role::Weapon::Weapon(){
 - 局部类中不允许使用静态成员变量
 
 - 局部类可以访问全局变量
-
-
-
-#### 继承
-
----
-
-**私有继承**
-
-使用私有继承，基类的公有成员和保护成员都将成为派生类的私有成员。因此，基类的方法将不会成为派生对象共有接口的一部分，但是可以在派生类的成员函数中使用它们。
-
-```c++
-class Student :private std::string, private std::valarray<double> //多重继承
-{
-    private:
-    	//...
-    public:
-    	//...
-};
-```
-
-**访问基类的方法：**
-
-使用私有继承时，只能在派生类的方法中使用基类的方法。
-
-```c++
-double Student::Average() const
-{
-    if(scores.size() > 0)
-    {
-        return scores.sum / scores.size();//scores为基类valarray
-    }else
-    {
-        return 0;
-    }
-}
-```
-
-私有继承使得能够使用类名和作用域解析运算符来调用基类方法：
-
-```c++
-double Student::Average() const
-{
-    if(std::valarray<double>::size() > 0)
-    {
-        return std::valarray<double>::sum/std::valarray<double>::size();
-    }else
-    {
-        return 0;
-    }
-}
-```
-
-**访问基类对象：**
-
-使用作用域解析运算符可以访问基类的方法，但若要使用基类对象的本身，则需要使用强制类型转换。由于Student类是从string类派生来的，因此可以通过强制类型转换，将Student对象转换为string对象。（通过*this可以调用方法的对象）
-
-```c++
-const string & Student::Name() const
-{
-    return (const string &) *this;
-}
-```
-
-**使用包含还是私有继承：**
-
-通常，应使用包含来建立has-a关系；但是如果新类需要访问原有类的保护成员，或需要重新定义虚函数，则应使用私有继承。
-
-**使用using重定义访问权限：**
-
-假设要让基类的方法在派生类外面可用，可以将函数调用包装在另一个函数调用中，即使用using声明来指定派生类可以使用特定的基类成员，即使采用的是私有继承。
-
-可以在student.h的**公有部分**加入如下using声明：
-
-```c++
-class Student :private std::string, private std::valarray<double>
-{
-    //...
-    public:
-    	using std::valarray<double>::min;
-    	using std::valarray<double>::max;
-    //...
-};
-```
-
-
 
 
 
@@ -2605,7 +2519,7 @@ smp->printfinfo();
 (*smp).printfinfo();
 ```
 
-**重载函数调用符号**：
+**重载函数调用符号**()：
 
 函数调用运算符 () 可以被重载用于类的对象。当重载 () 时，您不是创造了一种新的调用函数的方式，相反地，这是创建一个可以传递任意数目参数的运算符函数。其实就是创建一个可调用的对象
 
@@ -2711,9 +2625,260 @@ void test(){
 //当test()结束时,smp会调用析构函数从而释放申请的内存空间，防止内存泄露
 ```
 
+#### 继承
+
+---
+
+![image-20221112101754461](/Users/ywh/Documents/FindGoodJob/cpp_road-master/深度学习Cpp.assets/image-20221112101754461-8219481.png)
+
+所谓继承就是子类自动继承了父类的成员变量以及成员函数。
+
+> 子类不能继承父类的构造函数、析构函数，重载赋值运算符=。
+
+继承格式：
+
+```cpp
+class Object
+{
+public:
+    char name[0x20];
+};
+
+class MapObject: public Object
+{
+public:
+    int x,y;
+protected: // 子类可以访问，但是向外暴露
+    int h;
+private:  // 子类也不能访问
+  	int color;
+};
+
+class MoveObject: public MapObject
+{
+public:
+    int hp;
+    int lv;
+protected:
+    int speed;
+
+public:
+    MoveObject(){
+        h = 200; 
+    }
+};
+```
+
+不同的继承方式会影响基类成员在派生类中的访问权限。
+
+- public继承方式：
+
+  - 基类中所有 public 成员在派生类中为 public 属性；
+
+  - 基类中所有 protected 成员在派生类中为 protected 属性；
+
+  - 基类中所有 private 成员在派生类中不能使用。
+
+- protected继承方式：
+
+  - 基类中的所有 public 成员在派生类中为 protected 属性；
+
+  - 基类中的所有 protected 成员在派生类中为 protected 属性；
+
+  - 基类中的所有 private 成员在派生类中不能使用。
+
+- private继承方式：
+
+  - 基类中的所有 public 成员在派生类中均为 private 属性；
+
+  - 基类中的所有 protected 成员在派生类中均为 private 属性；
+
+  - 基类中的所有 private 成员在派生类中不能使用。
+
+可以通过上述得到以下结论：
+
+- 基类成员在派生类中的访问权限不得高于继承方式中指定的权限。例如，当继承方式为 protected 时，那么基类成员在派生类中的访问权限最高也为 protected，高于 protected 的会降级为 protected，但低于 protected 不会升级。
+
+  > 也就是说，继承方式private、protected、public是用来指明基类成员在派生类中的最高访问权限的
+
+- 基类中的 private 成员在派生类中始终不能使用（不能在派生类的成员函数中访问或调用）
+
+- 如果希望基类的成员能够被派生类继承并且毫无障碍地使用，那么这些成员只能声明为 public 或 protected；
+
+- 如果希望基类的成员既不向外暴露（不能通过对象访问），还能在派生类中使用，那么只能声明为 protected。
 
 
-#### 面向对象（继承、多态）
+
+**继承中的遮蔽问题**：
+
+如果派生类中的成员（包括成员变量和成员函数）和基类中的成员重名，那么就会遮蔽从基类继承过来的成员。
+
+对于成员函数要引起注意，不管函数的参数如何，只要名字一样就会造成遮蔽。换句话说，基类成员函数和派生类成员函数不会构成重载，如果派生类有同名函数，那么就会遮蔽基类中的所有同名函数，不管它们的参数是否一样。
+
+可以总结继承中出现**同名成员的处理方法**：
+
+> 同名时，子类成员会`隐藏`父类的同名成员。注意：隐藏不是覆盖
+
+> **访问方式**：通过作用域访问 `子类.父类名::成员名`
+
+> 对于同名成员函数，若子类和父类同名，则**父类的所有函数重载都会被隐藏**
+
+
+
+**继承过程中的作用域嵌套**：
+
+类其实也是一种作用域，每个类都会定义它自己的作用域。当存在继承关系时，派生类的作用域嵌套在基类的作用域之内，如果一个名字在派生类的作用域内无法找到，编译器会继续到外层的基类作用域中查找该名字的定义。
+
+假设 Base 是基类，Derived 是派生类，那么它们的作用域的嵌套关系如下图所示：
+
+![img](/Users/ywh/Documents/FindGoodJob/cpp_road-master/深度学习Cpp.assets/16450GS9-0.jpg)
+
+> 只有一个作用域内的同名函数才具有重载关系，不同作用域内的同名函数是会造成遮蔽
+
+
+
+
+
+没有继承关系的类对象的内存模型：
+
+![img](/Users/ywh/Documents/FindGoodJob/cpp_road-master/深度学习Cpp.assets/1G6326440-1.png)
+
+
+
+继承时的内存模型：
+
+![img](/Users/ywh/Documents/FindGoodJob/cpp_road-master/深度学习Cpp.assets/16462a427-3.jpg)
+
+其中C继承B，B继承A类，并且图示中也展示了存在遮蔽时的内存对象在内存中的分布。因此，在派生类的对象模型中，会包含所有基类的成员变量。这种设计方案的优点是访问效率高，能够在派生类对象中直接访问基类变量，无需经过好几层间接计算。
+
+
+
+**继承中的构造函数**：
+
+```cpp
+#include<iostream>
+using namespace std;
+
+//基类People
+class People{
+protected:
+    char *m_name;
+    int m_age;
+public:
+    People(char*, int);
+};
+People::People(char *name, int age): m_name(name), m_age(age){}
+
+//派生类Student
+class Student: public People{
+private:
+    float m_score;
+public:
+    Student(char *name, int age, float score);
+};
+//People(name, age)就是调用基类的构造函数
+Student::Student(char *name, int age, float score): People(name, age), m_score(score){ }
+// 注意：只能将基类构造函数的调用放在函数头部，不能放在函数体中。 因为基类的构造函数不会被继承，不能当做普通的成员函数来调用
+
+int main(){
+    Student stu("小明", 16, 90.5);
+    return 0;
+}
+```
+
+> 如果继承关系有好几层的话，例如：A --> B --> C
+>
+> 那么创建 C 类对象时构造函数的执行顺序为：A类构造函数 --> B类构造函数 --> C类构造函数
+>
+> 同时：派生类构造函数中只能调用直接基类的构造函数，不能调用间接基类的
+
+另外析构函数的执行顺序和构造函数的执行顺序也刚好相反：
+
+- 创建派生类对象时，构造函数的执行顺序和继承顺序相同，即先执行基类构造函数，再执行派生类构造函数。
+- 而销毁派生类对象时，析构函数的执行顺序和继承顺序相反，即先执行派生类析构函数，再执行基类析构函数。
+
+
+
+**访问基类的方法：**
+
+使用私有继承时，**只能在派生类的方法中使用基类的方法**。
+
+```c++
+double Student::Average() const
+{
+    if(scores.size() > 0)
+    {
+        return scores.sum / scores.size();//scores为基类valarray
+    }else
+    {
+        return 0;
+    }
+}
+```
+
+私有继承使得能够使用类名和作用域解析运算符来调用基类方法：
+
+```c++
+double Student::Average() const
+{
+    if(std::valarray<double>::size() > 0)
+    {
+        return std::valarray<double>::sum/std::valarray<double>::size();
+    }else
+    {
+        return 0;
+    }
+}
+```
+
+**访问基类对象：**
+
+使用作用域解析运算符可以访问基类的方法，但若要使用基类对象的本身，则需要使用强制类型转换。由于Student类是从string类派生来的，因此可以通过强制类型转换，将Student对象转换为string对象。（通过*this可以调用方法的对象）
+
+```c++
+const string & Student::Name() const
+{
+    return (const string &) *this;
+}
+```
+
+**使用包含还是私有继承：**
+
+通常，应使用包含来建立has-a关系；但是如果新类需要访问原有类的保护成员，或需要重新定义虚函数，则应使用私有继承。
+
+**使用using重定义访问权限：**
+
+假设要让基类的方法在派生类外面可用，可以将函数调用包装在另一个函数调用中，即使用using声明来指定派生类可以使用特定的基类成员，即使采用的是私有继承。
+
+可以在student.h的**公有部分**加入如下using声明：
+
+```c++
+class Student :private std::string, private std::valarray<double>
+{
+    //...
+    public:
+    	using std::valarray<double>::min;
+    	using std::valarray<double>::max;
+    //...
+};
+```
+
+
+
+**继承中的静态成员特性**：
+
+> 1. 静态成员可以被继承 且 静态成员变量在继承时候,无论父类还是子类都**共享同一段内存空间**
+> 2. 父类中被继承的静态成员变量一样会被同名的子类成员变量隐藏
+> 3. 父类中被继承的静态成员函数中，其所有重载函数也都会被隐藏
+> 4. 如果我们改变基类中一个函数的特征，所有使用该函数名的基类版本都会被隐藏
+
+虚继承的原理[虚继承常用于解决 菱形继承的二义性问题]
+
+> 编译器给类添加了一个指针，指针指向类似于表的组织，该表记录了该指针距离变量的偏移量
+
+
+
+#### 多态
 
 ---
 
@@ -2728,58 +2893,6 @@ void test(){
 > `继承`：类与类之间的关系，作用是==可以避免公共部分代码的重复开发，减少代码和数据冗余==
 >
 > `多态`：即“一个接口有多种方法[形态]"，程序运行时才决定调用的函数
-
-
-
-**继承**： 提高代码的复用性、扩展类的性能
-
-> 构造函数和析构函数不会被继承，因为其是每个类特有的。
->
-> `operator=`也不能被继承
-
-> B类继承于A类，或称从类A派生类B。这样的话，类A成为基类（父类）， 类B成为派生类（子类）。
->
-> ```cpp
-> class 派生类名 :继承方式 基类名{
-> }
-> ```
-
-> 继承方式：公有继承、私有继承、保护继承
->
-> ==继承方式影响着派生类访问基类成员的权限==
-
-![img](F:\Typora\Picture\Cpp\clip_image002.png)
-
-**继承中的构造和析构**：
-
-> 1. 子类对象在创建时会首先调用父类的构造函数，父类构造函数执行完毕后，然后成员变量如果有类变量则会调用成员变量的构造函数，最后才会调用子类的构造函数。
-> 2. 当父类构造函数有参数时，需要在子类初始化列表(参数列表)中显示调用父类构造函数
->
-> ==析构函数调用顺序和构造函数相反==
-
-继承中出现**同名成员的处理方法**：
-
-> 同名时，子类成员会`隐藏`父类的同名成员。注意：隐藏不是覆盖
->
-
-> **访问方式**：通过作用域访问 `子类.父类名::成员名`
-
-> 对于同名成员函数，若子类和父类同名，则**父类的所有函数重载都会被隐藏**
-
-**继承中的静态成员特性**：
-
-> 1. 静态成员可以被继承 且 静态成员变量在继承时候,无论父类还是子类都**共享同一段内存空间**
-> 2. 父类中被继承的静态成员变量一样会被同名的子类成员变量隐藏
-> 3. 父类中被继承的静态成员函数中，其所有重载函数也都会被隐藏
-> 4. 如果我们改变基类中一个函数的特征，所有使用该函数名的基类版本都会被隐藏
-
-多继承 [**不建议使用**]
-
-> 从多个类继承可能会**导致**函数、变量等同名导致较多的**歧义**。解决方法就是显示指定调用那个基类的成员。
-
-虚继承的原理[虚继承常用于解决 菱形继承的二义性问题]
-
-> 编译器给类添加了一个指针，指针指向类似于表的组织，该表记录了该指针距离变量的偏移量
 
 ---
 
@@ -2800,53 +2913,427 @@ void test(){
 > 1. 子类转换成父类（向上转换）：编译器认为指针的寻址范围缩小了，所以是安全的
 > 2. 父类转换成子类（向下转换）：译器认为指针的寻址范围扩大了，所以是不安全的
 
-
-
 ---
 
 **多态**：同一个操作作用于不同的对象，可以有不同的解释，会产生不同的效果
 
 > 作用：**改善了代码的可读性和组织性**，同时也使创建的程序具有**可扩展性**，项目**不仅**在最初**创建时期可以扩展**，**而且当项目在需要有新的功能时也能扩展**。
 
-> 发生条件：
->
-> 1. 有继承。
-> 2. 重写父类的虚函数。
-> 3. 父类指针指向子类对象。
+向上转型：用父类表达子类，用猴子表示人，用动物表达猴子（可以理解为用动物表示人，人是动物）
+
+向下转型：用子类表达父类，用人表示猴子，用猴子表达动物（明显不符合逻辑）
+
+```cpp
+#include <iostream>
+using namespace std;
+
+//基类People
+class People{
+public:
+    People(char *name, int age);
+    virtual void display();  //声明为虚函数
+protected:
+    char *m_name;
+    int m_age;
+};
+People::People(char *name, int age): m_name(name), m_age(age){}
+void People::display(){
+    cout<<m_name<<"今年"<<m_age<<"岁了，是个无业游民。"<<endl;
+}
+
+//派生类Teacher
+class Teacher: public People{
+public:
+    Teacher(char *name, int age, int salary);
+    virtual void display();  //声明为虚函数
+private:
+    int m_salary;
+};
+Teacher::Teacher(char *name, int age, int salary): People(name, age), m_salary(salary){}
+void Teacher::display() override  // 推荐些写上override标识是重写的
+{
+    cout<<m_name<<"今年"<<m_age<<"岁了，是一名教师，每月有"<<m_salary<<"元的收入。"<<endl;
+}
+
+int main(){
+    People *p = new People("王志刚", 23);
+    p -> display();
+
+    p = new Teacher("赵宏佳", 45, 8200);
+    p -> display(); // 如果没有声明为虚函数，调用的依旧是基类的方法
+
+    return 0;
+}
+```
+
+除了指针可以实现多态，引用也可以，不过引用不像指针灵活，指针可以随时改变指向，而引用只能指代固定的对象，在多态性方面缺乏表现力。
+
+```cpp
+int main(){
+    People p("王志刚", 23);
+    Teacher t("赵宏佳", 45, 8200);
+   
+    People &rp = p;
+    People &rt = t;
+   
+    rp.display();
+    rt.display();
+    return 0;
+}
+```
+
+**虚函数注意事项**：
+
+- 只需要在虚函数的声明处加上 virtual 关键字，函数定义处随意
+
+- 虚函数不能是函数模版
+
+- 如果是重写的虚函数，推荐写上 override进行标识。
+
+- 为了方便，你可以只将基类中的函数声明为虚函数，这样所有派生类中具有遮蔽关系的同名函数都将自动成为虚函数
+
+- 当在基类中定义了虚函数时，如果派生类没有定义新的函数来遮蔽此函数，那么将使用基类的虚函数。
+
+- 只有派生类的虚函数覆盖基类的虚函数（函数原型相同）才能构成多态
+
+  >例如基类虚函数的原型为`virtual void func();`，派生类虚函数的原型为`virtual void func(int);`，那么当基类指针 p 指向派生类对象时，语句`p -> func(100);`将会出错，而语句`p -> func();`将调用基类的函数。举个例子：
+  >
+  >```cpp
+  >#include <iostream>
+  >using namespace std;
+  >
+  >//基类Base
+  >class Base{
+  >public:
+  >    virtual void func();
+  >    virtual void func(int);
+  >};
+  >void Base::func(){
+  >    cout<<"void Base::func()"<<endl;
+  >}
+  >void Base::func(int n){
+  >    cout<<"void Base::func(int)"<<endl;
+  >}
+  >
+  >//派生类Derived
+  >class Derived: public Base{
+  >public:
+  >    void func();
+  >    void func(char *);
+  >};
+  >void Derived::func() final { // 如果不想以后被重写，需加上final
+  >    cout<<"void Derived::func()"<<endl;
+  >}
+  >void Derived::func(char *str){
+  >    cout<<"void Derived::func(char *)"<<endl;
+  >}
+  >
+  >int main(){
+  >    Base *p = new Derived();
+  >    p -> func();  //输出void Derived::func()
+  >    p -> func(10);  //输出void Base::func(int)
+  >    p -> func("http://c.biancheng.net");  //compile error  因为通过基类的指针只能访问从基类继承过去的成员，不能访问派生类新增的成员。
+  >
+  >    return 0;
+  >}
+  >```
+
+- 构造函数不能是虚函数。
+
+  > 原因：C++ 中的构造函数用于在创建对象时进行初始化工作，在执行构造函数之前对象尚未创建完成，虚函数表尚不存在，也没有指向虚函数表的指针，所以此时无法查询虚函数表，也就不知道要调用哪一个构造函数。
+
+- 析构函数可以声明为虚函数，而且有时候必须要声明为虚函数。
+
+  ```cpp
+  #include <iostream>
+  using namespace std;
+  
+  //基类
+  class Base{
+  public:
+      Base();
+      ~Base();
+  protected:
+      char *str;
+  };
+  Base::Base(){
+      str = new char[100];
+      cout<<"Base constructor"<<endl;
+  }
+  Base::~Base(){
+      delete[] str;
+      cout<<"Base destructor"<<endl;
+  }
+  
+  //派生类
+  class Derived: public Base{
+  public:
+      Derived();
+      ~Derived();
+  private:
+      char *name;
+  };
+  Derived::Derived(){
+      name = new char[100];
+      cout<<"Derived constructor"<<endl;
+  }
+  Derived::~Derived(){
+      delete[] name;
+      cout<<"Derived destructor"<<endl;
+  }
+  
+  int main(){
+     Base *pb = new Derived();
+     delete pb;
+  
+     cout<<"-------------------"<<endl;
+  
+     Derived *pd = new Derived();
+     delete pd;
+  
+     return 0;
+  }
+  
+  // 输出：
+  Base constructor
+  Derived constructor
+  Base destructor  // 由于基类的析构函数没有声明为虚函数，当用基类指针调用的是基类的析构函数
+  -------------------
+  Base constructor
+  Derived constructor
+  Derived destructor
+  Base destructor  // 由于是派生类的指针，调用的是派生类的析构函数，由于有继承关系，随后会调用基类的析构函数
+  ```
+
+  > 如果讲析构函数声明为虚函数，则两者都会发生两次析构（基类、派生类）调用。
 
 
+
+```cpp
+class A{
+public:
+    virtual void func(){
+        cout<<"A method"<<endl;
+    }
+};
+
+class B : public A
+{
+private: // 即使这里是private 也可以利用基类指针进行调用，因为基类的虚函数是public
+    void func() override{
+        cout<<"B method"<<endl;
+    }
+
+};
+
+int main(){
+    A * pa;
+    B b;
+    pa = &b;
+    pa->func();
+  
+  	b.func(); // 报错 不可访问
+  	// 因此在一定程度上破坏了面向对象的封装特性
+}
+```
+
+
+
+
+
+**多态发生条件**：
+
+1. 有继承。
+2. 重写父类的虚函数。即 关系中必须有同名的虚函数。
+3. 父类指针指向子类对象，即存在基类的指针并且通过基类指针调用虚函数。
+
+**虚函数表**：
+
+译器之所以能通过指针指向的对象找到虚函数，是因为在创建对象时额外地增加了虚函数表。
+
+如果一个类包含了虚函数，那么在创建该类的对象时就会额外地增加一个数组，数组中的每一个元素都是虚函数的入口地址。不过数组和对象是分开存储的，为了将对象和数组关联起来，编译器还要在对象中安插一个指针，指向数组的起始位置。这里的数组就是虚函数表（Virtual function table），简写为`vtable`
+
+```cpp
+#include <iostream>
+#include <string>
+using namespace std;
+
+//People类
+class People{
+public:
+    People(string name, int age);
+public:
+    virtual void display();
+    virtual void eating();
+protected:
+    string m_name;
+    int m_age;
+};
+People::People(string name, int age): m_name(name), m_age(age){ }
+void People::display(){
+		//...
+}
+void People::eating(){
+    //.. 
+}
+
+//Student类
+class Student: public People{
+public:
+    Student(string name, int age, float score);
+public:
+    virtual void display();
+    virtual void examing();
+protected:
+    float m_score;
+};
+Student::Student(string name, int age, float score):
+    People(name, age), m_score(score){ }
+void Student::display(){
+    // 重写了
+}
+void Student::examing(){
+   // ..
+}
+
+//Senior类
+class Senior: public Student{
+public:
+    Senior(string name, int age, float score, bool hasJob);
+public:
+    virtual void display();
+    virtual void partying();
+private:
+    bool m_hasJob;
+};
+Senior::Senior(string name, int age, float score, bool hasJob):
+    Student(name, age, score), m_hasJob(hasJob){ }
+void Senior::display(){
+	// 重写了
+}
+void Senior::partying(){
+  // ..
+}
+
+
+```
+
+各个类的对象内存模型如下所示：
+
+<img src="/Users/ywh/Documents/FindGoodJob/cpp_road-master/深度学习Cpp.assets/14431Q529-0.jpg" alt="img" style="zoom:70%;" />
+
+可见，基类的虚函数在 vtable 中的索引（下标）是固定的，不会随着继承层次的增加而改变，派生类新增的虚函数放在 vtable 的最后。如果派生类有同名的虚函数遮蔽（覆盖）了基类的虚函数，那么将使用派生类的虚函数替换基类的虚函数
+
+当通过指针调用虚函数时，先根据指针找到 vfptr，再根据 vfptr 找到虚函数的入口地址。
+
+
+
+
+
+
+
+一些其他要点：
+
+- 构造函数和析构函数是静态绑定的，其他是动态绑定的
+
+  ```cpp
+  #include<iostream>
+  
+  using namespace std;
+  
+  class A{
+  public:
+      A(){
+          func(); // 调用的是本类的func 因为此时还没有给派生类分配内存
+      }
+      virtual void func(){
+          cout<<"A method"<<endl;
+      }
+  };
+  
+  
+  class B : public A
+  {
+  public: 
+      B(){
+          func();
+      }
+      void func() override{
+          cout<<"B method"<<endl;
+      }
+  
+  };
+  
+  
+  int main(){
+      A * pa;
+      B b;
+      pa = &b;
+  }
+
+- 默认参数在多态中的小bug
+
+  ```cpp
+  using namespace std;
+  
+  class A{
+  public:
+      virtual void func(int v = 2){
+          cout<<"A method, v: "<<v<<endl;
+      }
+  };
+  
+  
+  class B : public A
+  {
+  public: 
+      void func(int v = 3) override{
+          cout<<"B method, v: "<<v<<endl;
+      }
+  
+  };
+  
+  
+  int main(){
+      A * pa;
+      B b;
+      pa = &b;
+      pa->func();
+    // 输出：B method, v: 2
+    // 因为v的值是在编译时确定的，想当于一个变量,是以基类为原则
+  }
+  ```
 
 
 
 **纯虚函数**和**抽象类**
 
-> 依赖倒转：业务层依赖抽象层，实现层依赖抽象层
->
-> ​	-[抽象层：含有虚函数的基类 实现层：派生类]
->
-> 开闭原则：对修改源代码关闭，对扩展功能开放
+纯虚函数没有函数体，只有函数声明，在虚函数声明的结尾加上`=0`，表明此函数为纯虚函数。
 
 ```cpp
-class Person{//抽象类
+class Person{//抽象类  包含纯虚函数的类称为抽象类（Abstract Class）
 public:
-    //纯虚函数
+    //纯虚函数  最后的=0并不表示函数返回值为0，它只起形式上的作用，告诉编译系统“这是纯虚函数”。
     virtual int getnum(int a,int b) = 0;
+  	// 只有类中的虚函数才能被声明为纯虚函数，普通成员函数和顶层函数均不能声明为纯虚函数
 }
 ```
 
 > 继承抽象类的派生类需要实现基类的所有虚函数，不然派生类也会变成抽象类
 
-引入纯虚函数的原因：
+抽象类：有**纯虚函数**的类叫抽象类，不能实例化对像。
+
+> 抽象类作为一种特殊的类，其目的是为了**抽象**和**设计**
+>
+> 抽象基类中除了包含纯虚函数外，还可以包含其它的成员函数（虚函数或普通函数）和成员变量。
+
+**引入纯虚函数的原因**：
 
 1. 为了方便使用多态特性，我们常常需要在基类中定义虚拟函数。
 
 2. 在很多情况下，基类本身生成对象是不合情理的。
 
    > 例如，动物作为一个基类可以派生出老虎、孔雀等子类，但动物本身生成对象明显不合常理。
-
-抽象类：有**纯虚函数**的类叫抽象类，不能实例化对像。
-
-> 抽象类作为一种特殊的类，其目的是为了**抽象**和**设计**
 
 主要作用：
 
@@ -2859,11 +3346,7 @@ public:
 
 
 
-
-
 模板方法模式
-
-![2016-07-07_204741](F:\Typora\Picture\Cpp\1111.jpg)
 
 ```cpp
 //抽象 制作饮品类
@@ -2949,11 +3432,21 @@ void test(){
 
 
 
-
-
-
-
 ### 常考问题
+
+---
+
+c++程序内存寻址模型：
+
+- **代码段**:存放程序的指令，是已经编译后的机器码。
+- **文本段**：存储程序中的一些字符串字面量，在程序中用于显示文字，只读
+- **全局数据段**：程序初始化时的**常量和全局/静态的变量**。
+- **堆**：存储动态内存分配的对策，比如new malloc，，是高地址增长的。
+- **栈**：存储着该程序“上下文”，比如局部变量和函数的参数值等，由编译器自动分配释放。
+
+![img](/Users/ywh/Documents/FindGoodJob/cpp_road-master/深度学习Cpp.assets/v2-0d8aeed026fcb865e5f228ee8cbe6d7e_1440w.webp)
+
+---
 
 为什么c++实现多态时候要将父类[基类]的析构函数设置为虚析构函数？
 
@@ -3056,3 +3549,22 @@ delete[] pArr2; //[]在前！
 >
 > 1. 有继承
 > 2. 子类（派生类）重新定义父类（基类）的同名成员（非virtual函数）
+
+---
+
+在main执行之前和之后执行的代码可能是什么？
+
+**main函数之前**：
+
+- 设置栈指针
+- 初始化静态`static`变量和`global`全局变量，即`.data`段的内容
+- 将未初始化部分的全局变量赋初值：数值型`short`，`int`，`long`等为`0`，`bool`为`FALSE`，指针为`NULL`等等，即`.bss`段的内容
+- 全局对象初始化，在`main`之前调用构造函数，这是可能会执行前的一些代码
+- 将main函数的参数`argc`，`argv`等传递给`main`函数，然后才真正运行`main`函数
+- `__attribute__((constructor))`：会在main函数执行之前被自动的执行【对于我们初始化一些在程序中使用的数据非常有用.】
+
+**main函数执行之后**：
+
+- 全局对象的析构函数会在main函数之后执行；
+- 可以用 **`atexit`** 注册一个函数，它会在main 之后执行;
+- `__attribute__((destructor))`：会在main（）函数执行之后或者exit（）被调用后被自动的执行。
